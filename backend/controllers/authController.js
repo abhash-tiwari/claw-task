@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 exports.register = async (req, res) => {
   try {
-    const { username, password, email } = req.body;
+    const { username, password, email, role } = req.body;
 
     // Check if user exists
     let user = await User.findOne({ $or: [{ username }, { email }] });
@@ -14,13 +14,15 @@ exports.register = async (req, res) => {
 
     // Create new user
     const hashedPassword = await bcrypt.hash(password, 10);
+    const userRole = role === "admin" ? "admin" : "employee";
+
     user = await User.create({
       username,
       password: hashedPassword,
       email,
-      role: 'employee'
+      role: userRole,
     });
-
+   
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -32,14 +34,16 @@ exports.login = async (req, res) => {
     const { username, password } = req.body;
 
     // Special case for admin
-    if (username === 'admin' && password === 'admin') {
-      const token = jwt.sign(
-        { id: 'admin', role: 'admin' },
-        process.env.JWT_SECRET,
-        { expiresIn: '24h' }
-      );
-      return res.json({ token });
-    }
+    // if (username === 'admin' && password === 'admin') {
+    //   const token = jwt.sign(
+    //     { id: 'admin', role: 'admin' },
+    //     process.env.JWT_SECRET,
+    //     { expiresIn: '24h' }
+    //   );
+    //   return res.json({ token });
+    // }
+
+   
 
     // Regular user login
     const user = await User.findOne({ username });
@@ -53,7 +57,16 @@ exports.login = async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    res.json({ token });
+    res.json({
+        token,
+        data: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+        },
+      });
+  
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
