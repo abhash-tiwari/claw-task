@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from "../../services/api"
 
 const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -11,7 +12,7 @@ const AdminDashboard = () => {
 
   const fetchResignations = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/admin/resignations');
+      const response = await api.get('/admin/resignations');
       const { data } = await response.json();
     } catch (error) {
       console.error('Error fetching resignations:', error);

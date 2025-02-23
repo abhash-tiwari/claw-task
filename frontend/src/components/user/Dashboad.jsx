@@ -44,7 +44,7 @@ const Dashboard = () => {
                     to="/exit-interview"
                     className="inline-block mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                   >
-                    Complete Exit Interview
+                    Feedback Form
                   </Link>
                 </>
               )}

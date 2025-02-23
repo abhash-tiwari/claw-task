@@ -37,7 +37,7 @@ const ExitQuestionnaire = () => {
         error: true 
       });
     }
-    navigate('/dashboard')
+    navigate('/thanks')
   };
 
   return (
@@ -55,7 +55,7 @@ const ExitQuestionnaire = () => {
           <div key={index} className="space-y-2">
             <label className="block font-medium">{item.questionText}</label>
             <textarea
-              className="w-full p-2 border rounded min-h-[100px]"
+              className="w-full p-2 border rounded min-h-[30px]"
               value={item.response}
               onChange={(e) => handleResponseChange(index, e.target.value)}
               required
@@ -66,7 +66,7 @@ const ExitQuestionnaire = () => {
           type="submit"
           className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
         >
-          Submit Questionnaire
+          Submit Feedback
         </button>
       </form>
     </div>
