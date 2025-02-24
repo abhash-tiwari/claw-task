@@ -59,100 +59,150 @@ const ResignationList = () => {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div className="text-red-500">{error}</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-red-50 p-4 rounded-lg">
+          <p className="text-red-600 font-medium">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-2xl font-bold mb-6">Resignation Requests</h2>
-      <div className="overflow-x-auto">
-        <table className="min-w-full">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="px-6 py-3 text-left">Employee</th>
-              <th className="px-6 py-3 text-left">Requested Date</th>
-              <th className="px-6 py-3 text-left">Status</th>
-              <th className="px-6 py-3 text-left">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {resignations.map((resignation) => (
-              <tr key={resignation._id}>
-                <td className="px-6 py-4">
-                  {resignation.employeeId?.username || "Unknown"}
-                </td>
-                <td className="px-6 py-4">
-                  {editingId === resignation._id ? (
-                    <input
-                      type="date"
-                      value={newLWD}
-                      onChange={(e) => setNewLWD(e.target.value)}
-                      className="border p-1 rounded w-32"
-                    />
-                  ) : (
-                    resignation.lwd ? new Date(resignation.lwd).toLocaleDateString() : "N/A"
-                  )}
-                </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`px-2 py-1 rounded text-white ${
-                      resignation.status === "pending"
-                        ? "bg-yellow-500"
-                        : resignation.status === "approved"
-                        ? "bg-green-500"
-                        : "bg-red-500"
-                    }`}
-                  >
-                    {resignation.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  {resignation.status === "pending" ? (
-                    editingId === resignation._id ? (
-                      <div className="space-x-2">
-                        <button
-                          onClick={() => handleConclude(resignation._id, true, newLWD)}
-                          className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                        >
-                          Save & Approve
-                        </button>
-                        <button
-                          onClick={() => setEditingId(null)}
-                          className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600"
-                        >
-                          Cancel
-                        </button>
+    <div className="w-full px-6 py-8">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="p-6">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+            Resignation Requests
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full whitespace-nowrap">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="text-left text-sm font-semibold text-gray-900 py-3 px-6">
+                    Employee
+                  </th>
+                  <th className="text-left text-sm font-semibold text-gray-900 py-3 px-6">
+                    Requested Date
+                  </th>
+                  <th className="text-left text-sm font-semibold text-gray-900 py-3 px-6">
+                    Status
+                  </th>
+                  <th className="text-left text-sm font-semibold text-gray-900 py-3 px-6">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {resignations.map((resignation) => (
+                  <tr key={resignation._id} className="hover:bg-gray-50">
+                    <td className="py-4 px-6 text-sm text-gray-900">
+                      <div className="min-w-[120px]">
+                        {resignation.employeeId?.username || "Unknown"}
                       </div>
-                    ) : (
-                      <div className="space-x-2">
-                        <button
-                          onClick={() => { setEditingId(resignation._id); setNewLWD(resignation.lwd); }}
-                          className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleConclude(resignation._id, true, resignation.lwd)}
-                          className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => handleConclude(resignation._id, false, resignation.lwd)}
-                          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    )
-                  ) : (
-                    <span className="text-gray-500">Completed</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                    </td>
+                    <td className="py-4 px-6 text-sm text-gray-500">
+                      {editingId === resignation._id ? (
+                        <input
+                          type="date"
+                          value={newLWD}
+                          onChange={(e) => setNewLWD(e.target.value)}
+                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        />
+                      ) : (
+                        resignation.lwd
+                          ? new Date(resignation.lwd).toLocaleDateString()
+                          : "N/A"
+                      )}
+                    </td>
+                    <td className="py-4 px-6 text-sm">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                          resignation.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : resignation.status === "approved"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {resignation.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-sm text-gray-500">
+                      {resignation.status === "pending" ? (
+                        editingId === resignation._id ? (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() =>
+                                handleConclude(resignation._id, true, newLWD)
+                              }
+                              className="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-green-500"
+                            >
+                              Save & Approve
+                            </button>
+                            <button
+                              onClick={() => setEditingId(null)}
+                              className="bg-gray-600 text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-gray-500"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingId(resignation._id);
+                                setNewLWD(resignation.lwd);
+                              }}
+                              className="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-blue-500"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleConclude(
+                                  resignation._id,
+                                  true,
+                                  resignation.lwd
+                                )
+                              }
+                              className="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-green-500"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleConclude(
+                                  resignation._id,
+                                  false,
+                                  resignation.lwd
+                                )
+                              }
+                              className="bg-red-600 text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-red-500"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        )
+                      ) : (
+                        <span className="text-gray-500 italic">Completed</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   );
