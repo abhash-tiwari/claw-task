@@ -127,6 +127,28 @@ exports.submitExitQuestionnaire = async (req, res) => {
   }
 };
 
+exports.checkQuestionnaireStatus = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(400).json({ message: 'User ID is missing' });
+    }
+    
+    const existingQuestionnaire = await ExitQuestionnaire.findOne({ employeeId: req.user.id });
+    
+    if (existingQuestionnaire) {
+      return res.json({ 
+        submitted: true,
+        submittedDate: existingQuestionnaire.createdAt
+      });
+    }
+    
+    return res.json({ submitted: false });
+  } catch (error) {
+    console.error('Error checking questionnaire status:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.getNotifications = async (req, res) => {
   try {
     const notifications = await Notification.find({
