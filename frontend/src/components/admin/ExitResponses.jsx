@@ -12,7 +12,7 @@ const ExitResponses = () => {
 
   const fetchResponses = async () => {
     try {
-      const token = localStorage.getItem("token"); // Ensure token is included
+      const token = localStorage.getItem("token");
       if (!token) {
         setError("Unauthorized: No token found");
         setLoading(false);
@@ -23,7 +23,7 @@ const ExitResponses = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("API Response:", response.data); // Debugging response structure
+      console.log("API Response:", response.data); 
 
       if (!response.data || !Array.isArray(response.data.data)) {
         throw new Error("Invalid API response format");
@@ -48,7 +48,7 @@ const ExitResponses = () => {
         {responses.map((response) => (
           <div key={response._id || Math.random()} className="border rounded-lg p-4">
             <h3 className="text-xl font-semibold mb-4">
-              Employee: {response.employeeId?.username || "Unknown"} {/* Safe access */}
+              Employee: {response.employeeId?.username || "Unknown"}
             </h3>
             <div className="space-y-4">
               {Array.isArray(response.responses) &&

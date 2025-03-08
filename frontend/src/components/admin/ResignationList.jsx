@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../../services/api";
+import ResignationModal from "./ResignationModal";
 
 const ResignationList = () => {
   const [resignations, setResignations] = useState([]);
@@ -7,6 +8,8 @@ const ResignationList = () => {
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [newLWD, setNewLWD] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedResignation, setSelectedResignation] = useState(null);
 
   useEffect(() => {
     fetchResignations();
@@ -29,7 +32,17 @@ const ResignationList = () => {
         throw new Error("Invalid API response");
       }
 
-      setResignations(response.data.data);
+      const enhancedResignations = response.data.data.map(resignation => {
+        if ((!resignation.reason || resignation.reason.trim() === '') && resignation.employeeId?._id) {
+          const storedReason = localStorage.getItem(`resignationReason_${resignation.employeeId._id}`);
+          if (storedReason) {
+            return { ...resignation, reason: storedReason };
+          }
+        }
+        return resignation;
+      });
+
+      setResignations(enhancedResignations);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching resignations:", error.response || error);
@@ -38,7 +51,7 @@ const ResignationList = () => {
     }
   };
 
-  const handleConclude = async (resignationId, approved, lwd) => {
+  const handleConclude = async (resignationId, approved, lwd, comments = "") => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -46,17 +59,51 @@ const ResignationList = () => {
         return;
       }
 
+      const reviewDate = new Date().toISOString().split('T')[0];
+
       await api.put(
         "/admin/conclude_resignation",
-        { resignationId, approved, lwd },
+        { 
+          resignationId, 
+          approved, 
+          lwd, 
+          comments,
+          reviewDate
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      const concludedResignation = resignations.find(r => r._id === resignationId);
+      
+      if (approved && concludedResignation?.employeeId?._id) {
+        localStorage.removeItem(`resignationReason_${concludedResignation.employeeId._id}`);
+      }
 
       fetchResignations();
     } catch (error) {
       setError("Failed to update resignation");
       console.error("Error updating resignation:", error.response || error);
     }
+  };
+
+  const openApprovalModal = (resignation) => {
+    setSelectedResignation(resignation);
+    setModalOpen(true);
+  };
+
+  const getResignationReason = (resignation) => {
+    if (resignation.reason && resignation.reason.trim() !== '') {
+      return resignation.reason;
+    }
+    
+    if (resignation.employeeId?._id) {
+      const storedReason = localStorage.getItem(`resignationReason_${resignation.employeeId._id}`);
+      if (storedReason) {
+        return storedReason;
+      }
+    }
+    
+    return "-";
   };
 
   if (loading) {
@@ -92,10 +139,19 @@ const ResignationList = () => {
                     Employee
                   </th>
                   <th className="text-left text-sm font-semibold text-gray-900 py-3 px-6">
-                    Requested Date
+                    Applied Date
+                  </th>
+                  <th className="text-left text-sm font-semibold text-gray-900 py-3 px-6">
+                    -
+                  </th>
+                  <th className="text-left text-sm font-semibold text-gray-900 py-3 px-6">
+                    -
                   </th>
                   <th className="text-left text-sm font-semibold text-gray-900 py-3 px-6">
                     Status
+                  </th>
+                  <th className="text-left text-sm font-semibold text-gray-900 py-3 px-6">
+                    Requested Date
                   </th>
                   <th className="text-left text-sm font-semibold text-gray-900 py-3 px-6">
                     Actions
@@ -106,23 +162,29 @@ const ResignationList = () => {
                 {resignations.map((resignation) => (
                   <tr key={resignation._id} className="hover:bg-gray-50">
                     <td className="py-4 px-6 text-sm text-gray-900">
-                      <div className="min-w-[120px]">
-                        {resignation.employeeId?.username || "Unknown"}
+                      <div className="flex items-center">
+                        <div>
+                          <div className="font-medium">
+                            {resignation.employeeId?.username || "Unknown"}
+                          </div>
+                          <div className="text-gray-500">
+                            {resignation.employeeId?.email || ""}
+                          </div>
+                        </div>
                       </div>
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-500">
-                      {editingId === resignation._id ? (
-                        <input
-                          type="date"
-                          value={newLWD}
-                          onChange={(e) => setNewLWD(e.target.value)}
-                          className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        />
-                      ) : (
-                        resignation.lwd
-                          ? new Date(resignation.lwd).toLocaleDateString()
-                          : "N/A"
-                      )}
+                      {resignation.createdAt
+                        ? new Date(resignation.createdAt).toLocaleDateString()
+                        : "N/A"}
+                    </td>
+                    <td className="py-4 px-6 text-sm text-gray-500">
+                      {getResignationReason(resignation)}
+                    </td>
+                    <td className="py-4 px-6 text-sm text-gray-500">
+                      {resignation.reviewDate
+                        ? new Date(resignation.reviewDate).toLocaleDateString()
+                        : "-"}
                     </td>
                     <td className="py-4 px-6 text-sm">
                       <span
@@ -138,61 +200,28 @@ const ResignationList = () => {
                       </span>
                     </td>
                     <td className="py-4 px-6 text-sm text-gray-500">
+                      {resignation.lwd
+                        ? new Date(resignation.lwd).toLocaleDateString()
+                        : "-"}
+                    </td>
+                    <td className="py-4 px-6 text-sm text-gray-500">
                       {resignation.status === "pending" ? (
-                        editingId === resignation._id ? (
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() =>
-                                handleConclude(resignation._id, true, newLWD)
-                              }
-                              className="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-green-500"
-                            >
-                              Save & Approve
-                            </button>
-                            <button
-                              onClick={() => setEditingId(null)}
-                              className="bg-gray-600 text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-gray-500"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              onClick={() => {
-                                setEditingId(resignation._id);
-                                setNewLWD(resignation.lwd);
-                              }}
-                              className="bg-blue-600 text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-blue-500"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleConclude(
-                                  resignation._id,
-                                  true,
-                                  resignation.lwd
-                                )
-                              }
-                              className="bg-green-600 text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-green-500"
-                            >
-                              Approve
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleConclude(
-                                  resignation._id,
-                                  false,
-                                  resignation.lwd
-                                )
-                              }
-                              className="bg-red-600 text-white px-3 py-2 rounded-md text-sm font-semibold hover:bg-red-500"
-                            >
-                              Reject
-                            </button>
-                          </div>
-                        )
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => openApprovalModal(resignation)}
+                            className="bg-green-600 text-white px-3 py-1 rounded-md text-sm font-medium hover:bg-green-500"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleConclude(resignation._id, false, resignation.lwd)
+                            }
+                            className="bg-red-600 text-white px-3 py-1 rounded-md text-sm font-medium hover:bg-red-500"
+                          >
+                            Reject
+                          </button>
+                        </div>
                       ) : (
                         <span className="text-gray-500 italic">Completed</span>
                       )}
@@ -204,6 +233,13 @@ const ResignationList = () => {
           </div>
         </div>
       </div>
+
+      <ResignationModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        resignation={selectedResignation}
+        onApprove={handleConclude}
+      />
     </div>
   );
 };

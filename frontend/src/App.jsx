@@ -7,11 +7,9 @@ import Login from './components/auth/Login';
 import Register from './components/auth/Register';
 import Dashboard from './components/user/Dashboad';
 import AdminDashboard from './components/admin/AdminDashboard';
-import ResignationForm from './components/user/ResignationForm';
 import ExitQuestionnaire from './components/user/ExitQuestionnaire';
 import ResignationList from './components/admin/ResignationList';
 import ExitResponses from './components/admin/ExitResponses';
-import Thanks from './components/user/Thanks';
 
 const App = () => {
   return (
@@ -23,9 +21,7 @@ const App = () => {
         <Route element={<Layout />}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="resign" element={<ResignationForm />} />
           <Route path="exit-interview" element={<ExitQuestionnaire />} />
-          <Route path="thanks" element={<Thanks />} />
         </Route>
       </Route>
 
